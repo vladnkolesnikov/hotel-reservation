@@ -2,7 +2,7 @@ build:
 	@go build -o ./bin/api
 
 run:build
-	@go run main.go --port 4000
+	DB_NAME="hotel-reservation" go run main.go --port 4000
 
 test:
 	go test -v ./...
