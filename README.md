@@ -1,4 +1,4 @@
-# Hotel reservation backend on Go lang
+# Hotel reservation backend on Golang
 
 FullTimeGoDev edu project
 
