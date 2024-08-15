@@ -2,6 +2,7 @@ package main
 
 import (
 	"context"
+	"errors"
 	"flag"
 	"fmt"
 	"github.com/gofiber/fiber/v2"
@@ -11,6 +12,7 @@ import (
 	"hotel-reservation/api"
 	"hotel-reservation/db"
 	"log"
+	"os"
 )
 
 const defaultPort = 3000
@@ -27,14 +29,36 @@ func main() {
 		log.Fatal(err)
 	}
 
-	app := fiber.New()
+	app := fiber.New(fiber.Config{
+		ErrorHandler: func(ctx *fiber.Ctx, err error) error {
+			code := fiber.StatusInternalServerError
+
+			var e *fiber.Error
+			if errors.As(err, &e) {
+				code = e.Code
+			}
+
+			return ctx.Status(code).JSON(struct {
+				Message string `json:"message"`
+				Status  int    `json:"status"`
+			}{
+				Message: err.Error(),
+				Status:  code,
+			})
+		},
+	})
+
 	app.Use(helmet.New())
 	apiV1 := app.Group("/api/v1")
+	dbName := os.Getenv(db.EnvDBName)
 
-	userHandler := api.NewUserHandler(db.NewMongoDBUserStore(client))
+	userHandler := api.NewUserHandler(db.NewMongoDBUserStore(client, dbName))
 
 	apiV1.Get("/users", userHandler.HandleGetUsers)
+	apiV1.Post("/users", userHandler.HandlePostUser)
 	apiV1.Get("/users/:id", userHandler.HandleGetUser)
+	apiV1.Delete("/users/:id", userHandler.HandleDeleteUser)
+	apiV1.Put("/users/:id", userHandler.HandlePutUser)
 
 	if appError := app.Listen(fmt.Sprintf(":%s", *port)); appError != nil {
 		log.Fatal(appError)
