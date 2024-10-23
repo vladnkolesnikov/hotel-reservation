@@ -9,8 +9,6 @@ import (
 	"hotel-reservation/types"
 )
 
-const usersCollectionName = "users"
-
 type UserStore interface {
 	Dropper
 
@@ -107,6 +105,8 @@ func (store *MongoUserStore) UpdateUser(ctx context.Context, filter bson.M, para
 
 	return nil
 }
+
+const usersCollectionName = "users"
 
 func NewMongoDBUserStore(client *mongo.Client, dbName string) *MongoUserStore {
 	return &MongoUserStore{

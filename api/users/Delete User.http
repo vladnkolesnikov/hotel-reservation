@@ -1,4 +1,4 @@
-### GET request to example server
+### Delete user
 DELETE http://127.0.0.1:4000/api/v1/users/66bb370a4f85b4b1d4d37130
 Content-Type: application/json
 ###

@@ -9,14 +9,14 @@ import (
 	"github.com/gofiber/fiber/v2/middleware/helmet"
 	"go.mongodb.org/mongo-driver/mongo"
 	"go.mongodb.org/mongo-driver/mongo/options"
-	"hotel-reservation/api"
+	"hotel-reservation/api/hotels"
+	"hotel-reservation/api/users"
 	"hotel-reservation/db"
 	"log"
 	"os"
 )
 
 const defaultPort = 3000
-const dbURI = "mongodb://localhost:27017"
 
 func main() {
 	port := flag.String("port", fmt.Sprint(defaultPort), "Port of the server")
@@ -24,7 +24,7 @@ func main() {
 
 	log.SetFlags(log.LstdFlags)
 
-	client, err := mongo.Connect(context.TODO(), options.Client().ApplyURI(dbURI))
+	client, err := mongo.Connect(context.TODO(), options.Client().ApplyURI(os.Getenv(db.EnvDbURI)))
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -49,16 +49,26 @@ func main() {
 	})
 
 	app.Use(helmet.New())
-	apiV1 := app.Group("/api/v1")
-	dbName := os.Getenv(db.EnvDBName)
 
-	userHandler := api.NewUserHandler(db.NewMongoDBUserStore(client, dbName))
+	var (
+		apiV1        = app.Group("/api/v1")
+		dbName       = os.Getenv(db.EnvDbName)
+		userHandler  = users.NewUserHandler(db.NewMongoDBUserStore(client, dbName))
+		hotelHandler = hotels.NewHotelHandler(db.NewMongoDBHotelStore(client, dbName))
+	)
 
-	apiV1.Get("/users", userHandler.HandleGetUsers)
-	apiV1.Post("/users", userHandler.HandlePostUser)
-	apiV1.Get("/users/:id", userHandler.HandleGetUser)
-	apiV1.Delete("/users/:id", userHandler.HandleDeleteUser)
-	apiV1.Put("/users/:id", userHandler.HandlePutUser)
+	usersAPI := apiV1.Group("/users")
+
+	usersAPI.Get("/", userHandler.HandleGetUsers)
+	usersAPI.Post("/", userHandler.HandlePostUser)
+	usersAPI.Get("/:id", userHandler.HandleGetUser)
+	usersAPI.Delete("/:id", userHandler.HandleDeleteUser)
+	usersAPI.Put("/:id", userHandler.HandlePutUser)
+
+	hotelsAPI := apiV1.Group("/hotels")
+	hotelsAPI.Post("/", hotelHandler.HandlePostHotel)
+	hotelsAPI.Get("/", hotelHandler.HandleGetHotels)
+	hotelsAPI.Get("/:id", hotelHandler.HandleGetHotel)
 
 	if appError := app.Listen(fmt.Sprintf(":%s", *port)); appError != nil {
 		log.Fatal(appError)

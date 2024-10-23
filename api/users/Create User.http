@@ -1,4 +1,4 @@
-### POST request
+### POST new user
 POST http://127.0.0.1:4000/api/v1/users
 Content-Type: application/json
 

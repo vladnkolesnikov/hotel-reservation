@@ -1,4 +1,4 @@
-### GET request to example server
+### UPDATE user by id
 PUT http://127.0.0.1:4000/api/v1/users/66bb37a9550d47cb8703f3e8
 Content-Type: application/json
 

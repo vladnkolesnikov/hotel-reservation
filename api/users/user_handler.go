@@ -1,7 +1,6 @@
-package api
+package users
 
 import (
-	"context"
 	"errors"
 	"github.com/gofiber/fiber/v2"
 	"go.mongodb.org/mongo-driver/bson"
@@ -22,12 +21,8 @@ func NewUserHandler(userStore db.UserStore) *UserHandler {
 }
 
 func (h *UserHandler) HandleGetUser(c *fiber.Ctx) error {
-	var (
-		id  = c.Params("id")
-		ctx = context.Background()
-	)
-
-	user, err := h.userStore.GetUserByID(ctx, id)
+	id := c.Params("id")
+	user, err := h.userStore.GetUserByID(c.Context(), id)
 
 	if err != nil {
 		if errors.Is(err, mongo.ErrNoDocuments) {
